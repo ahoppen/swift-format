@@ -1,0 +1,55 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  # check_triggering_actor:
+  #   name: Check user is allowed to create release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: |
+  #         if [[ "${{ github.triggering_actor }}" != "ahoppen" ]]; then
+  #           echo "${{ github.triggering_actor }} is not allowed to create a release"
+  #           exit 1
+  #         fi
+  # test_release:
+  #   name: Test in Release configuration
+  #   uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+  #   needs: check_triggering_actor
+  #   with:
+  #     exclude_swift_versions: '[{"swift_version": "5.8"}, {"swift_version": "5.9"}, {"swift_version": "5.10"}, {"swift_version": "nightly-6.0"}]'
+  #     build_command: "swift test -c release"
+  publish_release:
+    name: Create Tag
+    runs-on: ubuntu-latest
+    # needs: [test_debug, test_release]
+    # needs: [test_debug]
+    steps:
+    - name: Build tag name
+      id: date
+      run: echo "tag_name=601.0.0-prerelease-$(date +'%Y-%m-%d_%H-%M-%S')" >> "$GITHUB_OUTPUT"
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Patch release
+      uses: ./.github/actions/patch-release
+      with:
+        swift_syntax_tag: 601.0.0-prerelease-2024-09-25
+        swift_format_version: ${{ steps.date.outputs.tag_name }}
+    - name: Tag release
+      run: |
+        git tag "${{ steps.date.outputs.tag_name }}"
+        git push origin "${{ steps.date.outputs.tag_name }}"
+
+
+    # - name: Release snapshot
+    #   id: release-snapshot
+    #   uses: actions/create-release@latest
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag_name: "600.0.0-prerelease-${{ steps.date.outputs.date }}"
+    #     release_name: "600.0.0-prerelease-${{ steps.date.outputs.date }}"
+    #     draft: false
+    #     prerelease: true
