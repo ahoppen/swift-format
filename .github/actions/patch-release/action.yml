@@ -1,0 +1,26 @@
+name: "Patch release"
+description: Update the Package manifest to reference a specific version of swift-syntax and embed the given version in the swift-format --version command
+inputs:
+  swift_syntax_tag:
+    description: The tag of swift-syntax to depend on
+    required: true
+  swift_format_version:
+    description: The version of swift-format that is about to be released
+    required: true
+runs:
+  using: composite
+  steps:
+  - name: Patch release
+    shell: bash
+    run: |
+      git config --global user.name 'swift-ci'
+      git config --global user.email 'swift-ci@users.noreply.github.com'
+
+      sed -E -i 's#branch: "(main|release/[0-9]+\.[0-9]+)"#from: "${{ inputs.swift_syntax_tag }}"#' Package.swift
+      git add Package.swift
+      git commit -m "Change swift-syntax dependency to ${{ inputs.swift_syntax_tag }}"
+
+      sed -E -i 's#print\(".*"\)#print\("${{ inputs.swift_format_version }}"\)#' Sources/swift-format/PrintVersion.swift
+      git add Sources/swift-format/PrintVersion.swift
+      git commit -m "Change version to ${{ inputs.swift_format_version }}"
+
