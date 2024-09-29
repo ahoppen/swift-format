@@ -12,5 +12,5 @@
 
 func printVersionInformation() {
   // TODO: Automate updates to this somehow.
-  print("main")
+  print("601.0.0-prerelease-2024-09-29_04-35-53")
 }
