@@ -17,4 +17,8 @@ final class ConfigurationTests: XCTestCase {
 
     XCTAssertEqual(defaultInitConfig, emptyJSONConfig)
   }
+
+  func testMissingConfigurationFile() {
+    XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: #"C:\test.swift"#)))
+  }
 }
