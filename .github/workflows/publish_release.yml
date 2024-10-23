@@ -40,6 +40,7 @@ jobs:
     outputs:
       swift_syntax_tag: ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}
       swift_format_version: ${{ steps.swift_format_version.outputs.swift_format_version }}
+      release_commit_patch: ${{ steps.create_release_commits.outputs.release_commit_patch }}
     steps:
       - name: Determine swift-syntax tag to depend on
         id: swift_syntax_tag
@@ -65,26 +66,44 @@ jobs:
           fi
           echo "Using swift-format version: $SWIFT_FORMAT_VERSION"
           echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create release commits
+        id: create_release_commits
+        run: |
+          BASE_COMMIT=$(git rev-parse HEAD)
+          bash .github/workflows/create-release-commits.sh '${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}' '${{ steps.swift_format_version.outputs.swift_format_version }}'
+          {
+            echo 'release_commit_patch<<EOF'
+            git format-patch "$BASE_COMMIT"..HEAD --stdout
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
   test_debug:
     name: Test in Debug configuration
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+    uses: ahoppen/github-workflows/.github/workflows/swift_package_test.yml@windows-pre-build
     needs: define_tags
     with:
-      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      linux_pre_build_command: |
+        git config --global --add safe.directory "$(realpath .)"
+        git config --local user.name 'swift-ci'
+        git config --local user.email 'swift-ci@users.noreply.github.com'
+        echo '${{ needs.define_tags.outputs.release_commit_patch }}' | git am
       # We require that releases of swift-format build without warnings
-      build_command: swift test -Xswiftc -warnings-as-errors
-  test_release:
-    name: Test in Release configuration
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
-    needs: define_tags
-    with:
-      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
-      # We require that releases of swift-format build without warnings
-      build_command: swift test -c release -Xswiftc -warnings-as-errors
+      linux_build_command: swift test -Xswiftc -warnings-as-errors
+      windows_pre_build_command: |
+        cmd /c git config --local user.name "swift-ci"
+        cmd /c git config --local user.email "swift-ci@users.noreply.github.com"
+        echo @"
+        ${{ needs.define_tags.outputs.release_commit_patch }}
+        "@ > $env:TEMP\patch.diff
+        cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
+      windows_build_command: swift test -Xswiftc -warnings-as-errors
+      linux_exclude_swift_versions: '[{"swift_version": "5.8"}, {"swift_version": "5.9"}, {"swift_version": "5.10"}, {"swift_version": "6.0"}, {"swift_version": "nightly-main"}, {"swift_version": "nightly-6.0"}]'
+      windows_exclude_swift_versions: '[{"swift_version": "5.8"}, {"swift_version": "5.9"}, {"swift_version": "5.10"}, {"swift_version": "nightly"}, {"swift_version": "nightly-6.0"}]'
   create_tag:
     name: Create Tag
     runs-on: ubuntu-latest
-    needs: [check_triggering_actor, test_debug, test_release, define_tags]
+    needs: [check_triggering_actor, test_debug, define_tags]
     permissions:
       contents: write
     steps:
@@ -107,3 +126,7 @@ jobs:
           gh release create "${{ needs.define_tags.outputs.swift_format_version }}" \
             --title "${{ needs.define_tags.outputs.swift_format_version }}" \
             --prerelease
+
+# TODO:
+# - Move create-release-commits to workflow
+# - Use patch file in create_tag
