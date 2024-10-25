@@ -145,7 +145,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
         let relativePath =
-          path.hasPrefix(workingDirectory.path) && path.first != "/"
+          path.hasPrefix(workingDirectory.path) && FileManager.default.currentDirectoryPath != "/"
           ? String(path.dropFirst(workingDirectory.path.count + 1))
           : path
         output =
