@@ -32,7 +32,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
 
   /// The current working directory of the process, which is used to relativize URLs of files found
   /// during iteration.
-  private let workingDirectory = URL(fileURLWithPath: ".")
+  private let workingDirectory: URL
 
   /// Keep track of the current directory we're recursing through.
   private var currentDirectory = URL(fileURLWithPath: "")
@@ -43,11 +43,16 @@ public struct FileIterator: Sequence, IteratorProtocol {
   /// The file extension to check for when recursing through directories.
   private let fileSuffix = ".swift"
 
-  /// Create a new file iterator over the given list of file URLs.
-  ///
-  /// The given URLs may be files or directories. If they are directories, the iterator will recurse
-  /// into them.
-  public init(urls: [URL], followSymlinks: Bool) {
+    /// Create a new file iterator over the given list of file URLs.
+    /// 
+    /// The given URLs may be files or directories. If they are directories, the iterator will recurse
+    /// into them. Symlinks are never followed on Windows platforms as Foundation doesn't support it.
+    /// - Parameters:
+    ///   - urls: `Array` of files or directories to iterate.
+    ///   - followSymlinks: `Bool` to indicate if symbolic links should be followed when iterating.
+    ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
+    public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
+    self.workingDirectory = workingDirectory
     self.urls = urls
     self.urlIterator = self.urls.makeIterator()
     self.followSymlinks = followSymlinks
@@ -145,7 +150,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
         let relativePath =
-          path.hasPrefix(workingDirectory.path) && FileManager.default.currentDirectoryPath != "/"
+          path.hasPrefix(workingDirectory.path) && workingDirectory.path != "/"
           ? String(path.dropFirst(workingDirectory.path.count + 1))
           : path
         output =
