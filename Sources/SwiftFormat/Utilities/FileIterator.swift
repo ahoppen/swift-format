@@ -12,6 +12,10 @@
 
 import Foundation
 
+#if os(Windows)
+import WinSDK
+#endif
+
 /// Iterator for looping over lists of files and directories. Directories are automatically
 /// traversed recursively, and we check for files with a ".swift" extension.
 @_spi(Internal)
@@ -150,7 +154,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
         let relativePath =
-          path.hasPrefix(workingDirectory.path) && workingDirectory.path != "/"
+          path.hasPrefix(workingDirectory.path) && !URL(fileURLWithPath: FileManager.default.currentDirectoryPath).isRoot
           ? String(path.dropFirst(workingDirectory.path.count + 1))
           : path
         output =
@@ -173,4 +177,15 @@ private func fileType(at url: URL) -> FileAttributeType? {
   // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
   // Linux.
   return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+}
+
+fileprivate extension URL {
+    var isRoot: Bool {
+        guard isFileURL else { return false }
+        #if os(macOS)
+        return self.path == NSOpenStepRootDirectory()
+        #elseif os(Windows)
+        return self.path.withCString(encodedAs: UTF16.self, PathCchIsRoot)
+        #endif
+    }
 }

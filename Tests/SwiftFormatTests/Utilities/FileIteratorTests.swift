@@ -75,25 +75,21 @@ final class FileIteratorTests: XCTestCase {
     func testDoesNotTrimFirstCharacterOfPathIfRunningInRoot() throws {
       // Make sure that we don't drop the begining of the path if we are running in root.
       // https://github.com/swiftlang/swift-format/issues/862
-      let testDir = URL(fileURLWithPath: "/")
-      let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false, workingDirectory: testDir)
-      XCTAssertEqual(seen.count, 2)
-      XCTAssertTrue(seen.contains { $0.path.hasPrefix("/private/var") })
-      XCTAssertTrue(seen.contains { $0.path.hasPrefix("/private/var") })
+        FileManager.default.changeCurrentDirectoryPath("/")
+        let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
+        XCTAssertEqual(seen.count, 2)
+        XCTAssertTrue(seen.contains { $0.path.hasPrefix("/private/var") })
+        XCTAssertTrue(seen.contains { $0.path.hasPrefix("/private/var") })
     }
 
     func testShowsRelativePaths() throws {
       // Make sure that we still show the relative path if using them.
       // https://github.com/swiftlang/swift-format/issues/862
-      #if os(macOS)
-      let testDir = String("/private" + tmpdir.path)
-    #else
-      let testDir = String(tmpdir.path)
-    #endif
-      let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false, workingDirectory: URL(fileURLWithPath: testDir))
-      XCTAssertEqual(seen.count, 2)
-      XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
-      XCTAssertTrue(seen.contains { $0.relativePath == "project/real2.swift" })
+        FileManager.default.changeCurrentDirectoryPath(tmpdir.path)
+        let seen = allFilesSeen(iteratingOver: [URL(fileURLWithPath: ".")], followSymlinks: false)
+        XCTAssertEqual(seen.count, 2)
+        XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
+        XCTAssertTrue(seen.contains { $0.relativePath == "project/real2.swift" })
     }
 }
 
