@@ -85,7 +85,11 @@ final class FileIteratorTests: XCTestCase {
     func testShowsRelativePaths() throws {
       // Make sure that we still show the relative path if using them.
       // https://github.com/swiftlang/swift-format/issues/862
+      #if os(macOS)
       let testDir = String("/private" + tmpdir.path)
+    #else
+      let testDir = String(tmpdir.path)
+    #endif
       let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false, workingDirectory: URL(fileURLWithPath: testDir))
       XCTAssertEqual(seen.count, 2)
       XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
