@@ -153,15 +153,12 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // if the user passes paths that are relative to the current working directory, they will
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
-        #if os(Windows)
-        let relativePath = path
-        #else
         let relativePath =
-          path.hasPrefix(workingDirectory.path)
-            && !URL(fileURLWithPath: FileManager.default.currentDirectoryPath).isRoot
-          ? String(path.dropFirst(workingDirectory.path.count + 1))
-          : path
-        #endif
+          if !workingDirectory.isRoot, path.hasPrefix(workingDirectory.path) {
+            String(path.dropFirst(workingDirectory.path.count).drop(while: { $0 == "/" || $0 == #"\"# }))
+          } else {
+            path
+          }
         output =
           URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
 
@@ -182,17 +179,4 @@ private func fileType(at url: URL) -> FileAttributeType? {
   // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
   // Linux.
   return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
-}
-
-fileprivate extension URL {
-  var isRoot: Bool {
-    guard isFileURL else { return false }
-    #if os(macOS)
-    return self.path == NSOpenStepRootDirectory()
-    #elseif os(Windows)
-    return self.path.withCString(encodedAs: UTF16.self, PathCchIsRoot)
-    #else
-    return self.path == "/"
-    #endif
-  }
 }

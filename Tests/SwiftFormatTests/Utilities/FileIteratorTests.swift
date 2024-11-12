@@ -1,5 +1,30 @@
-@_spi(Internal) import SwiftFormat
+@_spi(Internal) @_spi(Testing) import SwiftFormat
 import XCTest
+
+extension URL {
+  /// Assuming this is a file URL, resolves all symlinks in the path.
+  ///
+  /// - Note: We need this because `URL.resolvingSymlinksInPath()` not only resolves symlinks but also standardizes the
+  ///   path by stripping away `private` prefixes. Since sourcekitd is not performing this standardization, using
+  ///   `resolvingSymlinksInPath` can lead to slightly mismatched URLs between the sourcekit-lsp response and the test
+  ///   assertion.
+  var realpath: URL {
+    #if canImport(Darwin)
+    return self.path.withCString { path in
+      guard let realpath = Darwin.realpath(path, nil) else {
+        return self
+      }
+      let result = URL(fileURLWithPath: String(cString: realpath))
+      free(realpath)
+      return result
+    }
+    #else
+    // Non-Darwin platforms don't have the `/private` stripping issue, so we can just use `self.resolvingSymlinksInPath`
+    // here.
+    return self.resolvingSymlinksInPath()
+    #endif
+  }
+}
 
 final class FileIteratorTests: XCTestCase {
   private var tmpdir: URL!
@@ -10,7 +35,7 @@ final class FileIteratorTests: XCTestCase {
       in: .userDomainMask,
       appropriateFor: FileManager.default.temporaryDirectory,
       create: true
-    )
+    ).realpath
 
     // Create a simple file tree used by the tests below.
     try touch("project/real1.swift")
@@ -73,26 +98,22 @@ final class FileIteratorTests: XCTestCase {
   }
 
   func testDoesNotTrimFirstCharacterOfPathIfRunningInRoot() throws {
-    #if os(Windows) && compiler(<5.10)
-    try XCTSkipIf(true, "Testing issues with Foundation inserting extra slashes.")
-    #endif
-    // Make sure that we don't drop the begining of the path if we are running in root.
+    // Find the root of tmpdir. On Unix systems, this is always `/`. On Windows it is the drive.
+    var root = tmpdir!
+    while !root.isRoot {
+      root.deleteLastPathComponent()
+    }
+    // Make sure that we don't drop the beginning of the path if we are running in root.
     // https://github.com/swiftlang/swift-format/issues/862
-    FileManager.default.changeCurrentDirectoryPath("/")
-    let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
-    XCTAssertEqual(seen.count, 2)
-    XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
-    XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
+    let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false, workingDirectory: root)
+    XCTAssertTrue(seen.allSatisfy { $0.relativePath.hasPrefix(root.path) }, "\(seen) does not contain root directory")
   }
 
   func testShowsRelativePaths() throws {
     // Make sure that we still show the relative path if using them.
     // https://github.com/swiftlang/swift-format/issues/862
-    FileManager.default.changeCurrentDirectoryPath(tmpdir.path)
-    let seen = allFilesSeen(iteratingOver: [URL(fileURLWithPath: ".")], followSymlinks: false)
-    XCTAssertEqual(seen.count, 2)
-    XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
-    XCTAssertTrue(seen.contains { $0.relativePath == "project/real2.swift" })
+    let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false, workingDirectory: tmpdir)
+    XCTAssertEqual(Set(seen.map(\.relativePath)), ["project/real1.swift", "project/real2.swift"])
   }
 }
 
