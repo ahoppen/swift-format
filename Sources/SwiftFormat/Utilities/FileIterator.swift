@@ -186,6 +186,8 @@ fileprivate extension URL {
         return self.path == NSOpenStepRootDirectory()
         #elseif os(Windows)
         return self.path.withCString(encodedAs: UTF16.self, PathCchIsRoot)
+        #else
+        return self.path == "/"
         #endif
     }
 }
