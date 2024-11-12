@@ -153,10 +153,14 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // if the user passes paths that are relative to the current working directory, they will
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
+          #if os(Windows)
+          let relativePath = path
+          #else
         let relativePath =
           path.hasPrefix(workingDirectory.path) && !URL(fileURLWithPath: FileManager.default.currentDirectoryPath).isRoot
           ? String(path.dropFirst(workingDirectory.path.count + 1))
           : path
+          #endif
         output =
           URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
 

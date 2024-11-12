@@ -73,6 +73,9 @@ final class FileIteratorTests: XCTestCase {
   }
 
     func testDoesNotTrimFirstCharacterOfPathIfRunningInRoot() throws {
+      #if os(Windows) && compiler(<5.10)
+    try XCTSkipIf(true, "Testing issues with Foundation inserting extra slashes.")
+#endif
       // Make sure that we don't drop the begining of the path if we are running in root.
       // https://github.com/swiftlang/swift-format/issues/862
         FileManager.default.changeCurrentDirectoryPath("/")
