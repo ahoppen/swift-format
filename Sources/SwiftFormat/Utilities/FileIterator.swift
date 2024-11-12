@@ -47,15 +47,15 @@ public struct FileIterator: Sequence, IteratorProtocol {
   /// The file extension to check for when recursing through directories.
   private let fileSuffix = ".swift"
 
-    /// Create a new file iterator over the given list of file URLs.
-    /// 
-    /// The given URLs may be files or directories. If they are directories, the iterator will recurse
-    /// into them. Symlinks are never followed on Windows platforms as Foundation doesn't support it.
-    /// - Parameters:
-    ///   - urls: `Array` of files or directories to iterate.
-    ///   - followSymlinks: `Bool` to indicate if symbolic links should be followed when iterating.
-    ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
-    public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
+  /// Create a new file iterator over the given list of file URLs.
+  ///
+  /// The given URLs may be files or directories. If they are directories, the iterator will recurse
+  /// into them. Symlinks are never followed on Windows platforms as Foundation doesn't support it.
+  /// - Parameters:
+  ///   - urls: `Array` of files or directories to iterate.
+  ///   - followSymlinks: `Bool` to indicate if symbolic links should be followed when iterating.
+  ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
+  public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
     self.workingDirectory = workingDirectory
     self.urls = urls
     self.urlIterator = self.urls.makeIterator()
@@ -153,14 +153,15 @@ public struct FileIterator: Sequence, IteratorProtocol {
         // if the user passes paths that are relative to the current working directory, they will
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
-          #if os(Windows)
-          let relativePath = path
-          #else
+        #if os(Windows)
+        let relativePath = path
+        #else
         let relativePath =
-          path.hasPrefix(workingDirectory.path) && !URL(fileURLWithPath: FileManager.default.currentDirectoryPath).isRoot
+          path.hasPrefix(workingDirectory.path)
+            && !URL(fileURLWithPath: FileManager.default.currentDirectoryPath).isRoot
           ? String(path.dropFirst(workingDirectory.path.count + 1))
           : path
-          #endif
+        #endif
         output =
           URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
 
@@ -184,14 +185,14 @@ private func fileType(at url: URL) -> FileAttributeType? {
 }
 
 fileprivate extension URL {
-    var isRoot: Bool {
-        guard isFileURL else { return false }
-        #if os(macOS)
-        return self.path == NSOpenStepRootDirectory()
-        #elseif os(Windows)
-        return self.path.withCString(encodedAs: UTF16.self, PathCchIsRoot)
-        #else
-        return self.path == "/"
-        #endif
-    }
+  var isRoot: Bool {
+    guard isFileURL else { return false }
+    #if os(macOS)
+    return self.path == NSOpenStepRootDirectory()
+    #elseif os(Windows)
+    return self.path.withCString(encodedAs: UTF16.self, PathCchIsRoot)
+    #else
+    return self.path == "/"
+    #endif
+  }
 }

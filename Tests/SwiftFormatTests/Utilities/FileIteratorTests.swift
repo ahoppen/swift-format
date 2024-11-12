@@ -31,8 +31,8 @@ final class FileIteratorTests: XCTestCase {
     #endif
     let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
     XCTAssertEqual(seen.count, 2)
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real1.swift") })
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real2.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real1.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real2.swift") })
   }
 
   func testFollowSymlinks() throws {
@@ -41,10 +41,10 @@ final class FileIteratorTests: XCTestCase {
     #endif
     let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: true)
     XCTAssertEqual(seen.count, 3)
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real1.swift") })
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real2.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real1.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/real2.swift") })
     // Hidden but found through the visible symlink project/link.swift
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.hidden.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.hidden.swift") })
   }
 
   func testTraversesHiddenFilesIfExplicitlySpecified() throws {
@@ -56,8 +56,8 @@ final class FileIteratorTests: XCTestCase {
       followSymlinks: false
     )
     XCTAssertEqual(seen.count, 2)
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.build/generated.swift") })
-      XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.hidden.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.build/generated.swift") })
+    XCTAssertTrue(seen.contains { $0.path.hasSuffix("project/.hidden.swift") })
   }
 
   func testDoesNotFollowSymlinksIfFollowSymlinksIsFalseEvenIfExplicitlySpecified() {
@@ -72,28 +72,28 @@ final class FileIteratorTests: XCTestCase {
     XCTAssertTrue(seen.isEmpty)
   }
 
-    func testDoesNotTrimFirstCharacterOfPathIfRunningInRoot() throws {
-      #if os(Windows) && compiler(<5.10)
+  func testDoesNotTrimFirstCharacterOfPathIfRunningInRoot() throws {
+    #if os(Windows) && compiler(<5.10)
     try XCTSkipIf(true, "Testing issues with Foundation inserting extra slashes.")
-#endif
-      // Make sure that we don't drop the begining of the path if we are running in root.
-      // https://github.com/swiftlang/swift-format/issues/862
-        FileManager.default.changeCurrentDirectoryPath("/")
-        let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
-        XCTAssertEqual(seen.count, 2)
-        XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
-        XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
-    }
+    #endif
+    // Make sure that we don't drop the begining of the path if we are running in root.
+    // https://github.com/swiftlang/swift-format/issues/862
+    FileManager.default.changeCurrentDirectoryPath("/")
+    let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
+    XCTAssertEqual(seen.count, 2)
+    XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
+    XCTAssertTrue(seen.contains { $0.path.hasPrefix("/") })
+  }
 
-    func testShowsRelativePaths() throws {
-      // Make sure that we still show the relative path if using them.
-      // https://github.com/swiftlang/swift-format/issues/862
-        FileManager.default.changeCurrentDirectoryPath(tmpdir.path)
-        let seen = allFilesSeen(iteratingOver: [URL(fileURLWithPath: ".")], followSymlinks: false)
-        XCTAssertEqual(seen.count, 2)
-        XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
-        XCTAssertTrue(seen.contains { $0.relativePath == "project/real2.swift" })
-    }
+  func testShowsRelativePaths() throws {
+    // Make sure that we still show the relative path if using them.
+    // https://github.com/swiftlang/swift-format/issues/862
+    FileManager.default.changeCurrentDirectoryPath(tmpdir.path)
+    let seen = allFilesSeen(iteratingOver: [URL(fileURLWithPath: ".")], followSymlinks: false)
+    XCTAssertEqual(seen.count, 2)
+    XCTAssertTrue(seen.contains { $0.relativePath == "project/real1.swift" })
+    XCTAssertTrue(seen.contains { $0.relativePath == "project/real2.swift" })
+  }
 }
 
 extension FileIteratorTests {
@@ -134,8 +134,12 @@ extension FileIteratorTests {
   }
 
   /// Computes the list of all files seen by using `FileIterator` to iterate over the given URLs.
-  private func allFilesSeen(iteratingOver urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) -> [URL] {
-      let iterator = FileIterator(urls: urls, followSymlinks: followSymlinks, workingDirectory: workingDirectory)
+  private func allFilesSeen(
+    iteratingOver urls: [URL],
+    followSymlinks: Bool,
+    workingDirectory: URL = URL(fileURLWithPath: ".")
+  ) -> [URL] {
+    let iterator = FileIterator(urls: urls, followSymlinks: followSymlinks, workingDirectory: workingDirectory)
     var seen: [URL] = []
     for next in iterator {
       seen.append(next)
