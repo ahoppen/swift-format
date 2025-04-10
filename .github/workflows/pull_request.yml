@@ -3,6 +3,7 @@ name: Pull request
 on:
   pull_request:
     types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,9 +23,9 @@ jobs:
       api_breakage_check_allowlist_path: "api-breakages.txt"
   performance_test:
     runs-on: ubuntu-latest
-    container:
-      image: swift:latest
-      options: --cap-add SYS_PTRACE
+    # container:
+    #   image: swift:latest
+    #   options: --cap-add SYS_PTRACE
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
