@@ -19,102 +19,11 @@ var products: [Product] = [
     name: "swift-format",
     targets: ["swift-format"]
   ),
-  .library(
-    name: "SwiftFormat",
-    targets: ["SwiftFormat"]
-  ),
-  .plugin(
-    name: "FormatPlugin",
-    targets: ["Format Source Code"]
-  ),
-  .plugin(
-    name: "LintPlugin",
-    targets: ["Lint Source Code"]
-  ),
 ]
 
 var targets: [Target] = [
-  .target(
-    name: "_SwiftFormatInstructionCounter",
-    exclude: ["CMakeLists.txt"]
-  ),
-
-  .target(
-    name: "SwiftFormat",
-    dependencies: [
-      .product(name: "Markdown", package: "swift-markdown")
-    ]
-      + swiftSyntaxDependencies([
-        "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
-      ]),
-    exclude: ["CMakeLists.txt"]
-  ),
-  .target(
-    name: "_SwiftFormatTestSupport",
-    dependencies: [
-      "SwiftFormat"
-    ]
-      + swiftSyntaxDependencies([
-        "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
-      ])
-  ),
-  .plugin(
-    name: "Format Source Code",
-    capability: .command(
-      intent: .sourceCodeFormatting(),
-      permissions: [
-        .writeToPackageDirectory(reason: "This command formats the Swift source files")
-      ]
-    ),
-    dependencies: [
-      .target(name: "swift-format")
-    ],
-    path: "Plugins/FormatPlugin"
-  ),
-  .plugin(
-    name: "Lint Source Code",
-    capability: .command(
-      intent: .custom(
-        verb: "lint-source-code",
-        description: "Lint source code for a specified target."
-      )
-    ),
-    dependencies: [
-      .target(name: "swift-format")
-    ],
-    path: "Plugins/LintPlugin"
-  ),
   .executableTarget(
-    name: "generate-swift-format",
-    dependencies: [
-      "SwiftFormat"
-    ]
-  ),
-  .executableTarget(
-    name: "swift-format",
-    dependencies: [
-      "_SwiftFormatInstructionCounter",
-      "SwiftFormat",
-      .product(name: "ArgumentParser", package: "swift-argument-parser"),
-    ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"]),
-    exclude: ["CMakeLists.txt"],
-    linkerSettings: swiftformatLinkSettings
-  ),
-
-  .testTarget(
-    name: "SwiftFormatPerformanceTests",
-    dependencies: [
-      "SwiftFormat",
-      "_SwiftFormatTestSupport",
-    ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"])
-  ),
-  .testTarget(
-    name: "SwiftFormatTests",
-    dependencies: [
-      "SwiftFormat",
-      "_SwiftFormatTestSupport",
-      .product(name: "Markdown", package: "swift-markdown"),
-    ] + swiftSyntaxDependencies(["SwiftOperators", "SwiftParser", "SwiftSyntax", "SwiftSyntaxBuilder"])
+    name: "swift-format"
   ),
 ]
 
