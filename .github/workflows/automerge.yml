@@ -8,7 +8,7 @@ on:
 jobs:
   create_merge_pr:
     name: Create PR to merge main into release branch
-    uses: swiftlang/github-workflows/.github/workflows/create_automerge_pr.yml@main
+    uses: ahoppen/github-workflows/.github/workflows/create_automerge_pr.yml@automerge-improvements
     with:
       base_branch: release/6.2
     if: (github.event_name == 'schedule' && github.repository == 'swiftlang/swift-format') || (github.event_name != 'schedule')  # Ensure that we don't run this on a schedule in a fork
