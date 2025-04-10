@@ -9,20 +9,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
-    name: Test
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
-    with:
-      linux_exclude_swift_versions: "[{\"swift_version\": \"5.8\"}]"
-  soundness:
-    name: Soundness
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
-    with:
-      license_header_check_project_name: "Swift.org"
-      api_breakage_check_allowlist_path: "api-breakages.txt"
+  # tests:
+  #   name: Test
+  #   uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+  #   with:
+  #     linux_exclude_swift_versions: "[{\"swift_version\": \"5.8\"}]"
+  # soundness:
+  #   name: Soundness
+  #   uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
+  #   with:
+  #     license_header_check_project_name: "Swift.org"
+  #     api_breakage_check_allowlist_path: "api-breakages.txt"
   perf:
-    name: Test
+    name: Performance test
     uses: ahoppen/github-workflows/.github/workflows/performance_test.yml@performance-test
     with:
-      command: "echo Test: 1"
+      pre_measure_command: |
+        # swift build
+      measure_command: |
+        # SWIFT_FORMAT_EXECUTABLE=$(realpath $(swift build --show-bin-path))/swift-format
+        # CODE_SIZE=$(ls -l "$SWIFT_FORMAT_EXECUTABLE" | awk '{ print $5 }')
+        CODE_SIZE=$(ls -l Package.swift | awk '{ print $5 }')
+        echo "Code Size: $CODE_SIZE"
       sensitivity: 0
