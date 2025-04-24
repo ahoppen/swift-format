@@ -1,0 +1,40 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:Benchmarks}",
+      "name": "Debug Benchmarks",
+      "program": "${workspaceFolder:Benchmarks}/.build/debug/Benchmarks",
+      "preLaunchTask": "swift: Build Debug Benchmarks"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:Benchmarks}",
+      "name": "Release Benchmarks",
+      "program": "${workspaceFolder:Benchmarks}/.build/release/Benchmarks",
+      "preLaunchTask": "swift: Build Release Benchmarks"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:Benchmarks}",
+      "name": "Debug MyBenchmark",
+      "program": "${workspaceFolder:Benchmarks}/.build/debug/MyBenchmark",
+      "preLaunchTask": "swift: Build Debug MyBenchmark"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:Benchmarks}",
+      "name": "Release MyBenchmark",
+      "program": "${workspaceFolder:Benchmarks}/.build/release/MyBenchmark",
+      "preLaunchTask": "swift: Build Release MyBenchmark"
+    }
+  ]
+}
