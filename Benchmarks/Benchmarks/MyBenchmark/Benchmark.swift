@@ -10,7 +10,7 @@ let benchmarks: @Sendable () -> Void = {
     "Fibonacci computation",
     configuration: configuration
   ) { benchmark in
-    blackHole(fibonacci(30))
+    blackHole(fibonacci(35))
   }
 }
 
