@@ -1,0 +1,9 @@
+name: Pull request comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  run_pr_tests:
+    uses: ./.github/workflows/pull_request.yml
