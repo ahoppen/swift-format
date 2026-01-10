@@ -1,0 +1,17 @@
+name: Notify stale PRs
+# In the first period after branching the release branch, we typically want to include all changes from `main` also in the release branch. This workflow automatically creates a PR every Monday to merge main into the release branch.
+# Later in the release cycle we should stop this practice to avoid landing risky changes by disabling this workflow. To do so, disable the workflow as described in https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/disabling-and-enabling-a-workflow
+permissions:
+  contents: read
+on:
+  workflow_dispatch:
+jobs:
+  ping_stale_prs:
+    name: Notify stale PRs
+    uses: ahoppen/github-workflows/.github/workflows/ping_stale_prs.yml@notify-stale-prs-2
+    with:
+      stale_duration_weeks: 0
+    permissions:
+      contents: write
+      pull-requests: write
+    # if: (github.event_name == 'schedule' && github.repository == 'swiftlang/swift-format') || (github.event_name != 'schedule')  # Ensure that we don't run this on a schedule in a fork
